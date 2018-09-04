@@ -1,9 +1,10 @@
 #-*- coding:utf-8 -*
 
 import tensorflow as tf
-from LSTM_captcha.computational_graph_lstm import *
-from LSTM_captcha.config import *
-from LSTM_captcha.util import *
+from computational_graph_lstm import *
+from config import *
+from util import *
+import re
 
 # def get_test_set():
 #
@@ -75,7 +76,8 @@ def open_iamge(file):
 def predict():
 
     with tf.Session() as sess:
-        saver = tf.train.import_meta_graph(path + "/model/" + "model.ckpt-5000.meta")
+        saver = tf.train.import_meta_graph(get_meta_graph())
+        #saver = tf.train.import_meta_graph(path + "/model/" + "model.ckpt-1000.meta")
         saver.restore(sess, tf.train.latest_checkpoint(path + "/model/")) #读取已训练模型
 
         graph = tf.get_default_graph()  #获取原始计算图，并读取其中的tensor
@@ -104,12 +106,31 @@ def predict():
 
 def write_to_file(predict_list, file_list):
     with open(output_path, 'a') as f:
+        iSucc = 0
         for i, res in enumerate(predict_list):
             if i == 0:
                 f.write("id\tfile\tresult\n")
-            f.write(str(i) + "\t" + file_list[i] + "\t" + res + "\n")
+            result = 'fail'
+            if file_list[i][0:4].upper() == res.upper():
+                result = 'succ'
+                iSucc = iSucc + 1
+            f.write(str(i+1) + "\t" + file_list[i][0:4] + "\t" + res + "\t" + result + '\n')
     print("预测结果保存在：",output_path)
+    print("命中率为",iSucc/len(predict_list))
 
+def get_meta_graph():
+    file_list = os.listdir(model_meta_path)   #获取测试集路径下的所有文件
+    file_index = 99999999
+    for i in range(0,len(file_list)):
+        s = file_list[i]
+        u=r'^model\.ckpt-(.*?)\.meta$'
+        result = re.findall(u,s) 
+        if 1 == len(result):
+            if file_index > int(result[0]):
+                file_index = int(result[0])
+    filepath = model_meta_path + '''/model.ckpt-''' + str(file_index) + '''.meta'''
+    print(filepath)
+    return filepath
 
 if __name__ == '__main__':
     predict()

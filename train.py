@@ -2,9 +2,9 @@
 
 
 import tensorflow as tf
-from LSTM_captcha.util import *
-from LSTM_captcha.computational_graph_lstm import *
-
+from util import *
+from computational_graph_lstm import *
+import time
 
 def train():
 
@@ -17,25 +17,30 @@ def train():
 
     saver = tf.train.Saver()  # 创建训练模型保存类
     init = tf.global_variables_initializer()    #初始化变量值
-
+    print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), ' init over')
     with tf.Session() as sess:  # 创建tensorflow session
         sess.run(init)
         iter = 1
-        while iter < iteration:
+        tempAcc = 0
+        while iter <= iteration:
             batch_x, batch_y = get_batch()
             sess.run(opt, feed_dict={x: batch_x, y: batch_y})   #只运行优化迭代计算图
-            if iter %100==0:
+            if iter %100 == 0:
                 los, acc, parg, yarg = sess.run([loss, accuracy, pre_arg, y_arg],feed_dict={x:batch_x,y:batch_y})
-                print("For iter ",iter)
+                print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), ' run ', iter, ' times, acc ', acc, ' , tempAcc ', tempAcc)
+                '''print("For iter ",iter)
                 print("Accuracy ",acc)
                 print("Loss ",los)
                 if iter % 1000 ==0:
                     print("predict arg:",parg[0:10])
-                    print("yarg :",yarg[0:10])
+                    print("yarg :",yarg[0:10])'''
                 print("__________________")
-                # if acc > 0.95:
-                #     print("training complete, accuracy:", acc)
-                #     break
+                #if acc > tempAcc:
+                #    tempAcc = acc
+                #    saver.save(sess, model_path, global_step=iter)
+                if acc > 0.95:
+                    print("training complete, accuracy:", acc)
+                    break
             if iter % 1000 == 0:   #保存模型
                 saver.save(sess, model_path, global_step=iter)
             iter += 1

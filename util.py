@@ -4,13 +4,13 @@ import os
 import random
 import numpy as np
 from PIL import Image
-from LSTM_captcha.config import *
+from config import *
 
 
 
 def get_batch(data_path = captcha_path, is_training = True):
     target_file_list = os.listdir(data_path)    #读取路径下的所有文件名
-
+    #print(data_path, len(target_file_list))
     batch = batch_size if is_training else len(target_file_list)   # 确认batch 大小
     batch_x = np.zeros([batch, time_steps, n_input])   #batch 数据
     batch_y = np.zeros([batch, captcha_num, n_classes])   # batch 标签
